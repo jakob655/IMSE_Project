@@ -18,22 +18,18 @@ CREATE TABLE Customer (
 CREATE TABLE Building (
     Building_ID INT PRIMARY KEY,
     Name VARCHAR(255),
-    ZIP_Code INT,
     City VARCHAR(255),
-    District VARCHAR(255)
 );
 
 CREATE TABLE Room (
     Room_ID INT PRIMARY KEY,
     Building_ID INT,
     RoomSize DECIMAL,
-    EquippedFor VARCHAR(255),
     FOREIGN KEY (Building_ID) REFERENCES Building(Building_ID)
 );
 
 CREATE TABLE Course (
     Course_ID INT PRIMARY KEY,
-    Title VARCHAR(255),
     Price DECIMAL,
     StartingTime TIME,
     FinishingTime TIME,
@@ -53,7 +49,6 @@ CREATE TABLE ForChildren (
 CREATE TABLE ForAdults (
     Course_ID INT PRIMARY KEY,
     PreviousKnowledge VARCHAR(255),
-    RequiredEquipment VARCHAR(255),
     FOREIGN KEY (Course_ID) REFERENCES Course(Course_ID)
 );
 
@@ -67,8 +62,6 @@ CREATE TABLE Instructor (
 CREATE TABLE Housekeeper (
     SL_ID INT PRIMARY KEY,
     PhoneNumber VARCHAR(255),
-    WorkShiftBegin TIME,
-    WorkShiftEnd TIME,
     FOREIGN KEY (SL_ID) REFERENCES Employee(SL_ID)
 );
 
@@ -104,8 +97,3 @@ CREATE TABLE ResponsibleFor (
     FOREIGN KEY (Building_ID) REFERENCES Building(Building_ID)
 );
 
-CREATE TABLE LocatedIn (
-    ZIP_Code INT,
-    City VARCHAR(255),
-    PRIMARY KEY (ZIP_Code, City)
-);
