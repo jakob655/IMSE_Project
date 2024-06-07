@@ -1,3 +1,4 @@
+
 CREATE DATABASE IF NOT EXISTS project_database;
 USE project_database;
 
@@ -77,7 +78,7 @@ CREATE TABLE IF NOT EXISTS Supervise (
     SL_ID INT,
     Course_ID INT,
     PRIMARY KEY (SL_ID, Course_ID),
-    FOREIGN KEY (SL_ID) REFERENCES Instructor(SL_ID),
+    FOREIGN KEY (SL_ID) REFERENCES Employee(SL_ID),
     FOREIGN KEY (Course_ID) REFERENCES Course(Course_ID)
 );
 

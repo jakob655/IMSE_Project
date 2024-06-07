@@ -4,58 +4,231 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Populator</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        select, button {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
     <button id="populateButton">Populate Database</button>
 
     <div id="dataContainer"></div>
 
+    <div>
+        <h2>Select an Employee:</h2>
+        <select id="employeeSelect">
+            <!-- Options will be dynamically populated -->
+        </select>
+    </div>
+
+    <div>
+        <h2>Select a Course:</h2>
+        <select id="courseSelect">
+            <!-- Options will be dynamically populated -->
+        </select>
+    </div>
+
+    <button id="linkButton">Link Employee and Course</button>
+    
+    <div id="dataContainer">
+        <table id="superviseTable"></table>
+    </div>
+
     <script>
+
         document.getElementById('populateButton').addEventListener('click', () => {
             fetch('/populate', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     console.log('Success:', data);
+                    fetchDataAndDisplay();
                 })
                 .catch((error) => {
                     console.error('Error:', error);
                 });
         });
 
-        fetch('/data/Employee')
-            .then(response => response.json())
-            .then(data => {
-                const dataContainer = document.getElementById('dataContainer');
-                dataContainer.innerHTML = '<h2>Employee Table</h2>';
+        document.getElementById('linkButton').addEventListener('click', () => {
+            const employeeId = document.getElementById('employeeSelect').value;
+            const courseId = document.getElementById('courseSelect').value;
 
-                const table = document.createElement('table');
-                const headers = Object.keys(data[0]);
-
-                // Create table header
-                const headerRow = document.createElement('tr');
-                headers.forEach(header => {
-                    const th = document.createElement('th');
-                    th.textContent = header;
-                    headerRow.appendChild(th);
-                });
-                table.appendChild(headerRow);
-
-                // Create table rows
-                data.forEach(rowData => {
-                    const row = document.createElement('tr');
-                    headers.forEach(header => {
-                        const cell = document.createElement('td');
-                        cell.textContent = rowData[header];
-                        row.appendChild(cell);
+            if (employeeId && courseId) {
+                fetch(`/link?employeeId=${employeeId}&courseId=${courseId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                       // fetchEmployeesAndPopulateDropdown();
+                       // fetchCoursesAndPopulateDropdown();
+                       fetchSuperviseTable();
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
                     });
-                    table.appendChild(row);
-                });
+            } else {
+                console.error('Error: Employee or course not selected');
+            }
+        });
 
-                dataContainer.appendChild(table);
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
+        function fetchDataAndDisplay() {
+            fetch('/data/Employee')
+                .then(response => response.json())
+                .then(data => {
+                    //displayData(data);
+                    fetchEmployeesAndPopulateDropdown();
+                    fetchCoursesAndPopulateDropdown();
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        function fetchEmployeesAndPopulateDropdown() {
+            fetch('/data/Employee')
+                .then(response => response.json())
+                .then(employees => {
+                    const employeeSelect = document.getElementById('employeeSelect');
+                    employeeSelect.innerHTML = '';
+                    employees.forEach(employee => {
+                        const option = document.createElement('option');
+                        option.value = employee.SL_ID;
+                        option.textContent = `${employee.FirstName} ${employee.Surname}`;
+                        employeeSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching employees:', error);
+                });
+        }
+
+        function fetchCoursesAndPopulateDropdown() {
+            fetch('/data/Course')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(courses => {
+                    const courseSelect = document.getElementById('courseSelect');
+                    courseSelect.innerHTML = '';
+                    courses.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.Course_ID;
+                        option.textContent = course.Course_ID;
+                        courseSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching courses:', error);
+                });
+        }
+
+        function displayData(data) {
+            const dataContainer = document.getElementById('dataContainer');
+            dataContainer.innerHTML = '<h2>Employee Table</h2>';
+
+            if (!Array.isArray(data) || data.length === 0) {
+                dataContainer.innerHTML += '<p>No data available</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            const headers = Object.keys(data[0]);
+
+            const headerRow = document.createElement('tr');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
             });
+            table.appendChild(headerRow);
+
+            data.forEach(rowData => {
+                const row = document.createElement('tr');
+                headers.forEach(header => {
+                    const cell = document.createElement('td');
+                    cell.textContent = rowData[header];
+                    row.appendChild(cell);
+                });
+                table.appendChild(row);
+            });
+
+            dataContainer.appendChild(table);
+        }
+        function fetchSuperviseTable() {
+    fetch('/data/Supervise')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            displaySuperviseTable(data);
+        })
+        .catch(error => {
+            console.error('Error fetching supervise data:', error);
+        });
+}
+
+function displaySuperviseTable(data) {
+    const superviseContainer = document.getElementById('superviseTable');
+    superviseContainer.innerHTML = '<h2>Supervise Table</h2>';
+
+    if (!Array.isArray(data) || data.length === 0) {
+        superviseContainer.innerHTML += '<p>No data available</p>';
+        return;
+    }
+
+    const table = document.createElement('table');
+    const headers = Object.keys(data[0]);
+
+    const headerRow = document.createElement('tr');
+    headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
+
+    data.forEach(rowData => {
+        const row = document.createElement('tr');
+        headers.forEach(header => {
+            const cell = document.createElement('td');
+            cell.textContent = rowData[header];
+            row.appendChild(cell);
+        });
+        table.appendChild(row);
+    });
+
+    superviseContainer.appendChild(table);
+}
     </script>
 </body>
 </html>

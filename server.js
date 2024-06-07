@@ -37,7 +37,6 @@ function createTables(connection) {
     populateTables(connection);
 }
 
-
 // Function to populate tables with data from CSV files
 function populateTables(connection) {
     // Define mappings of table names to CSV files
@@ -47,7 +46,6 @@ function populateTables(connection) {
         Building: 'Buildings.csv',
         Room: 'Rooms.csv',
         Course: 'Courses.csv', //TODO
-        Instructor: { Qualifications: 'Requirements.csv', MailAddress: 'Mailaddresses.csv' }, //TODO
         Housekeeper: 'PhoneNumbers.csv'
     };
 
@@ -105,6 +103,131 @@ app.post('/populate', (req, res) => {
         createTables(connection);
 
         res.json({ message: 'Database population started' });
+    });
+});
+
+app.get('/data/Employee', (req, res) => {
+    const connection = mysql.createConnection(dbConfig);
+
+    connection.connect(err => {
+        if (err) {
+            console.error('Error connecting to the database:', err);
+            res.status(500).json({ error: 'Database connection failed' });
+            return;
+        }
+        console.log('Connected to the database');
+
+        connection.query('SELECT * FROM Employee ORDER BY RAND() LIMIT 50', (err, results) => {
+            connection.end(); 
+
+            if (err) {
+                console.error('Error fetching data:', err);
+                res.status(500).json({ error: 'Error fetching data from database' });
+                return;
+            }
+
+            res.json(results); 
+        });
+    });
+});
+
+app.get('/data/Supervise', async (req, res) => {
+    try {
+        const connection = mysql.createConnection(dbConfig);
+        await connect(connection);
+
+        console.log('Connected to the database');
+
+        const results = await query(connection, 'SELECT * FROM Supervise');
+        connection.end();
+
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching supervise data:', error);
+        res.status(500).json({ error: 'Error fetching data from database' });
+    }
+});
+
+// Funktionen für Verbindung und Abfrage
+
+function connect(connection) {
+    return new Promise((resolve, reject) => {
+        connection.connect(err => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+function query(connection, sql) {
+    return new Promise((resolve, reject) => {
+        connection.query(sql, (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
+
+// Fetch data for courses
+app.get('/data/Course', (req, res) => {
+    const connection = mysql.createConnection(dbConfig);
+
+    connection.connect(err => {
+        if (err) {
+            console.error('Error connecting to the database:', err);
+            res.status(500).json({ error: 'Database connection failed' });
+            return;
+        }
+        console.log('Connected to the database');
+
+        // Select only the Course_ID and Title columns
+        connection.query('SELECT Course_ID FROM Course', (err, results) => {
+            connection.end(); // End the database connection
+
+            if (err) {
+                console.error('Error fetching data:', err);
+                res.status(500).json({ error: 'Error fetching data from database' });
+                return;
+            }
+
+            res.json(results); // Send the retrieved data as JSON response
+        });
+    });
+});
+
+// Link employee and course
+app.post('/link', (req, res) => {
+    const { employeeId, courseId } = req.query;
+
+    const connection = mysql.createConnection(dbConfig);
+
+    connection.connect(err => {
+        if (err) {
+            console.error('Error connecting to the database:', err);
+            res.status(500).json({ error: 'Database connection failed' });
+            return;
+        }
+        console.log('Connected to the database');
+
+        const query = `INSERT INTO Supervise (SL_ID, Course_ID) VALUES (${employeeId}, ${courseId})`;
+
+        connection.query(query, (err, results) => {
+            connection.end(); // End the database connection
+
+            if (err) {
+                console.error('Error linking employee and course:', err);
+                res.status(500).json({ error: 'Error linking employee and course' });
+                return;
+            }
+
+            res.json({ message: 'Employee and course linked successfully' });
+        });
     });
 });
 
