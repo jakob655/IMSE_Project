@@ -67,7 +67,9 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('Success:', data);
-                    fetchDataAndDisplay();
+                    clearSuperviseTable();
+                    setTimeout(fetchDataAndDisplay, 23000);
+                    //fetchDataAndDisplay();
                 })
                 .catch((error) => {
                     console.error('Error:', error);
@@ -196,6 +198,11 @@
             console.error('Error fetching supervise data:', error);
         });
 }
+
+function clearSuperviseTable() {
+            const superviseTable = document.getElementById('superviseTable');
+            superviseTable.innerHTML = '';
+        }
 
 function displaySuperviseTable(data) {
     const superviseContainer = document.getElementById('superviseTable');

@@ -39,7 +39,15 @@ function createTables(connection) {
 
 // Function to populate tables with data from CSV files
 function populateTables(connection) {
-    // Define mappings of table names to CSV files
+    // First, clear the Supervise table
+    connection.query('DELETE FROM Supervise', (err, results) => {
+        if (err) {
+            console.error('Error clearing Supervise table:', err);
+        } else {
+            console.log('Supervise table cleared');
+        }
+    });
+
     const tableMappings = {
         Employee: 'Employees.csv',
         Customer: 'Customers.csv',
@@ -59,30 +67,29 @@ function populateTables(connection) {
                 fs.createReadStream(path.join(__dirname, 'Data', filePath))
                     .pipe(csv())
                     .on('data', (row) => {
-						const columns = Object.keys(row).join(',');
-						let values = Object.values(row).map(value => {
-							if (value === '') {
-								return 'NULL'; // Replace empty string with NULL
-							} else {
-								// Escape single quotes in values
-								return `'${value.replace(/'/g, "''")}'`;
-							}
-						}).join(',');
+                        const columns = Object.keys(row).join(',');
+                        let values = Object.values(row).map(value => {
+                            if (value === '') {
+                                return 'NULL';
+                            } else {
+                                // Escape single quotes in values
+                                return `'${value.replace(/'/g, "''")}'`;
+                            }
+                        }).join(',');
 
-						const query = `INSERT IGNORE INTO ${table} (${columns}) VALUES (${values})`;
+                        const query = `INSERT IGNORE INTO ${table} (${columns}) VALUES (${values})`;
 
-						connection.query(query, (err, results) => {
-							if (err) {
-								console.error('Error inserting data into', table, ':', err);
-							} else {
-								console.log(`Inserted into ${table}: ${values}`);
-							}
-						});
-					})
-					.on('end', () => {
-						console.log(`CSV file ${filePath}.csv successfully processed`);
-					});
-
+                        connection.query(query, (err, results) => {
+                            if (err) {
+                                console.error('Error inserting data into', table, ':', err);
+                            } else {
+                                console.log(`Inserted into ${table}: ${values}`);
+                            }
+                        });
+                    })
+                    .on('end', () => {
+                        console.log(`CSV file ${filePath} successfully processed`);
+                    });
             }
         }
     }
@@ -186,7 +193,7 @@ app.get('/data/Course', (req, res) => {
         }
         console.log('Connected to the database');
 
-        // Select only the Course_ID and Title columns
+        // Select only the Course_ID 
         connection.query('SELECT Course_ID FROM Course', (err, results) => {
             connection.end(); // End the database connection
 
