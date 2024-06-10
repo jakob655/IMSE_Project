@@ -5,7 +5,7 @@ node server.js
 
 *Website öffnen:*
 localhost:3000
-(hat zur Zeit nur einen Button)
+push auf "Pupulate Database" - dannach 10 Sekunden warten um Ergebnisse in den Dropdown Menüs zu sehen
 
 *Stop:*
 CTRL + C, um localhost zu beenden
