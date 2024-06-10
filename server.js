@@ -47,13 +47,15 @@ function populateTables(connection) {
             console.log('Supervise table cleared');
         }
     });
+    
 
     const tableMappings = {
         Employee: 'Employees.csv',
+        Course: 'Courses.csv', //TODO
         Customer: 'Customers.csv',
+        Participate: 'Participate.csv',
         Building: 'Buildings.csv',
         Room: 'Rooms.csv',
-        Course: 'Courses.csv', //TODO
         Housekeeper: 'PhoneNumbers.csv'
     };
 
@@ -193,9 +195,8 @@ app.get('/data/Course', (req, res) => {
         }
         console.log('Connected to the database');
 
-        // Select only the Course_ID 
         connection.query('SELECT Course_ID FROM Course', (err, results) => {
-            connection.end(); // End the database connection
+            connection.end(); 
 
             if (err) {
                 console.error('Error fetching data:', err);
@@ -203,9 +204,37 @@ app.get('/data/Course', (req, res) => {
                 return;
             }
 
-            res.json(results); // Send the retrieved data as JSON response
+            res.json(results); 
         });
     });
+});
+
+app.get('/data/topEmployees', async (req, res) => {
+    try {
+        const connection = mysql.createConnection(dbConfig);
+        await connect(connection);
+
+        console.log('Connected to the database');
+
+        const sql = `
+            SELECT e.FirstName, e.Surname, e.SL_ID, c.Course_ID, COUNT(p.Customer_ID) AS ParticipantCount
+            FROM Employee e
+            JOIN Supervise s ON e.SL_ID = s.SL_ID
+            JOIN Course c ON s.Course_ID = c.Course_ID
+            JOIN Participate p ON c.Course_ID = p.Course_ID
+            GROUP BY e.FirstName, e.Surname, e.SL_ID, c.Course_ID
+            ORDER BY ParticipantCount DESC
+            LIMIT 3;
+        `;
+
+        const results = await query(connection, sql);
+        connection.end();
+
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching top employees:', error);
+        res.status(500).json({ error: 'Error fetching data from database' });
+    }
 });
 
 // Link employee and course
@@ -225,7 +254,7 @@ app.post('/link', (req, res) => {
         const query = `INSERT INTO Supervise (SL_ID, Course_ID) VALUES (${employeeId}, ${courseId})`;
 
         connection.query(query, (err, results) => {
-            connection.end(); // End the database connection
+            connection.end();
 
             if (err) {
                 console.error('Error linking employee and course:', err);

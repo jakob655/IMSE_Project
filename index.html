@@ -43,14 +43,12 @@
     <div>
         <h2>Select an Employee:</h2>
         <select id="employeeSelect">
-            <!-- Options will be dynamically populated -->
         </select>
     </div>
 
     <div>
         <h2>Select a Course:</h2>
         <select id="courseSelect">
-            <!-- Options will be dynamically populated -->
         </select>
     </div>
 
@@ -58,6 +56,12 @@
     
     <div id="dataContainer">
         <table id="superviseTable"></table>
+    </div>
+
+    <div id="topEmployeesContainer">
+        <h2>Top Employees</h2>
+        <table id="topEmployeesTable">
+        </table>
     </div>
 
     <script>
@@ -68,7 +72,7 @@
                 .then(data => {
                     console.log('Success:', data);
                     clearSuperviseTable();
-                    setTimeout(fetchDataAndDisplay, 23000);
+                    setTimeout(fetchDataAndDisplay, 10000);
                     //fetchDataAndDisplay();
                 })
                 .catch((error) => {
@@ -88,6 +92,7 @@
                        // fetchEmployeesAndPopulateDropdown();
                        // fetchCoursesAndPopulateDropdown();
                        fetchSuperviseTable();
+                       fetchTopEmployees();
                     })
                     .catch((error) => {
                         console.error('Error:', error);
@@ -104,6 +109,7 @@
                     //displayData(data);
                     fetchEmployeesAndPopulateDropdown();
                     fetchCoursesAndPopulateDropdown();
+                    fetchTopEmployees();
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
@@ -183,6 +189,7 @@
 
             dataContainer.appendChild(table);
         }
+
         function fetchSuperviseTable() {
     fetch('/data/Supervise')
         .then(response => {
@@ -236,6 +243,47 @@ function displaySuperviseTable(data) {
 
     superviseContainer.appendChild(table);
 }
+
+function fetchTopEmployees() {
+            fetch('/data/topEmployees')
+                .then(response => response.json())
+                .then(employees => {
+                    displayTopEmployees(employees);
+                })
+                .catch(error => {
+                    console.error('Error fetching top employees:', error);
+                });
+        }
+
+        function displayTopEmployees(employees) {
+            const table = document.getElementById('topEmployeesTable');
+            table.innerHTML = '';
+
+            if (employees.length === 0) {
+                table.innerHTML = '<tr><td colspan="5">No data available</td></tr>';
+                return;
+            }
+
+            const headerRow = document.createElement('tr');
+            ['First Name', 'Surname', 'Employee ID', 'Course ID', 'Participants'].forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            table.appendChild(headerRow);
+
+            employees.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.FirstName}</td>
+                    <td>${employee.Surname}</td>
+                    <td>${employee.SL_ID}</td>
+                    <td>${employee.Course_ID}</td>
+                    <td>${employee.ParticipantCount}</td>
+                `;
+                table.appendChild(row);
+            });
+        }
     </script>
 </body>
 </html>
